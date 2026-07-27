@@ -15,6 +15,8 @@ funnel-forge/
 ├── ui/
 │   └── main_window.py         # PyQt6 মেইন উইন্ডো (ফর্ম + লগ ভিউ)
 ├── requirements.txt
+├── build.sh                    # Linux/Termux বিল্ড স্ক্রিপ্ট (venv + PyInstaller, শেষে auto-clean)
+├── build.bat                   # Windows বিল্ড স্ক্রিপ্ট (একই কাজ করে)
 ├── start-funnel.sh            # (ঐচ্ছিক) পুরনো CLI স্ক্রিপ্ট, ম্যানুয়াল ব্যবহারের জন্য রাখা হয়েছে
 ├── stop-funnel.sh              # (ঐচ্ছিক) পুরনো CLI স্ক্রিপ্ট
 └── settings.json               # প্রথম রান-এর পর অটো তৈরি হবে (git-ignored)
@@ -90,6 +92,31 @@ GUI-তে যা করতে পারবেন:
 - **Settings সেভ করুন** চাপলে হোস্টনেম/পোর্ট ইত্যাদি `settings.json`-এ সংরক্ষিত থাকবে পরবর্তী রান-এর জন্য
 
 > প্রথমবার চালালে ব্রাউজারে একটি Tailscale অথেনটিকেশন লিংক খুলতে হতে পারে — সেটি ওপেন করে ডিভাইসটি 'Connect'/'Allow' করে দিন।
+
+## 📦 ধাপ ৫: সিঙ্গেল বাইনারি বানানো (venv + PyInstaller)
+
+আলাদা virtual environment-এর ভেতরে বিল্ড হয়, বিল্ড শেষে নিজে থেকেই সব ক্লিন হয়ে যায় — শুধু চূড়ান্ত বাইনারিটা `dist/` ফোল্ডারে থেকে যায়। `.spec` ফাইলটা কমিট করা নেই — স্ক্রিপ্ট চালালে প্রতিবার নতুন করে জেনারেট হয় এবং বিল্ড শেষে মুছে যায়।
+
+**Linux / Termux / proot-Debian:**
+
+```bash
+./build.sh
+```
+
+**Windows:**
+
+```bat
+build.bat
+```
+
+স্ক্রিপ্টটি যা করে:
+
+1. `python3 -m venv` (venv মডিউল) আছে কিনা যাচাই করে — না থাকলে স্পষ্ট এরর দেখিয়ে বন্ধ হয়ে যায় (Debian/Termux-এ `sudo apt install python3-venv` দিয়ে ঠিক করা যাবে)
+2. একটা ফ্রেশ `.build-venv` virtualenv বানিয়ে সেখানে `requirements.txt` থেকে dependency ইনস্টল করে
+3. সেই venv-এর ভেতর থেকে PyInstaller দিয়ে `--onefile` বাইনারি বিল্ড করে (`.spec` ফাইল এই ধাপেই ফ্রেশ জেনারেট হয়)
+4. শেষে venv, `build/`, জেনারেটেড `.spec`, এবং `__pycache__` ফোল্ডারগুলো মুছে ফেলে
+
+আউটপুট: `dist/funnel-forge` (Linux/Termux) বা `dist/funnel-forge.exe` (Windows) — এটাই একমাত্র বাইনারি ফাইল। যে প্ল্যাটফর্ম/আর্কিটেকচারের জন্য বাইনারি চান, সেই প্ল্যাটফর্মেই স্ক্রিপ্টটা চালাতে হবে (cross-compile হয় না)।
 
 ## 🔁 বিকল্প: পুরনো শেল স্ক্রিপ্ট দিয়ে (CLI)
 

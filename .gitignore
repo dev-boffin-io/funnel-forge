@@ -1,5 +1,10 @@
 # === Funnel-Forge ===
 settings.json
+dist/
+build/
+.build-venv/
+*.spec
+*.spec.bak
 
 # === Python ===
 __pycache__/
