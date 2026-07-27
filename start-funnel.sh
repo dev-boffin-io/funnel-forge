@@ -1,16 +1,20 @@
 #!/bin/bash
 
-echo -e "\e[1;34m=== Starting Funnel-Forge ===\e[0m"
+echo -e "\e[1;34m=== Restarting Share-Forge Tailscale Funnel ===\e[0m"
 
+# ১. পুরোনো সকেট এবং ব্যাকগ্রাউন্ড প্রসেস ক্লিন করা
 sudo pkill tailscaled 2>/dev/null
 sudo rm -f /tmp/tailscaled.sock
 
-echo -e "\e[1;33mInitializing Tailscale daemon...\e[0m"
+# ২. ব্যাকগ্রাউন্ডে Tailscale ডেমন চালু করা
+echo -e "\e[1;33mStarting Tailscale daemon...\e[0m"
 sudo tailscaled --tun=userspace-networking --socket=/tmp/tailscaled.sock > /dev/null 2>&1 &
 sleep 3
 
-echo -e "\e[1;33mConnecting to Tailscale network...\e[0m"
-sudo tailscale --socket=/tmp/tailscaled.sock up --hostname=share-forge > /dev/null 2>&1
+# ৩. টেইলস্কেল নেটওয়ার্কে রি-কানেক্ট করা
+echo -e "\e[1;34mConnecting to network...\e[0m"
+sudo tailscale --socket=/tmp/tailscaled.sock up --hostname=boffin-io > /dev/null 2>&1
 
-echo -e "\e[1;32mStarting Funnel on port 5000...\e[0m"
-sudo tailscale --socket=/tmp/tailscaled.sock funnel 5000
+# ৪. পোর্ট ৫০০০ এর জন্য ফানেল চালু করা
+echo -e "\e[1;32mLaunching Funnel on port 3000...\e[0m"
+sudo tailscale --socket=/tmp/tailscaled.sock funnel 3000
