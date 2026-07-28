@@ -1,11 +1,12 @@
 @echo off
-REM build.bat — Funnel-Forge single-binary builder (Windows)
+REM build.bat - Funnel-Forge single-binary builder (Windows)
 REM
-REM 1. python venv module আছে কিনা যাচাই করে
-REM 2. ফ্রেশ virtualenv বানিয়ে dependencies ইনস্টল করে
-REM 3. PyInstaller দিয়ে সিঙ্গেল বাইনারি বিল্ড করে (.spec প্রতিবার নতুন জেনারেট হয়)
-REM 4. venv, build\, __pycache__, এবং জেনারেটেড .spec মুছে পরিষ্কার করে —
-REM    শুধু dist\funnel-forge.exe রেখে দেয়
+REM 1. Checks that the python venv module is available
+REM 2. Creates a fresh virtualenv and installs dependencies inside it
+REM 3. Builds a single binary with PyInstaller (the .spec file is
+REM    regenerated fresh on every run)
+REM 4. Cleans up the venv, build\, __pycache__, and the generated .spec
+REM    file afterward - only dist\funnel-forge.exe is kept
 
 setlocal enabledelayedexpansion
 
@@ -14,36 +15,36 @@ set VENV_DIR=.build-venv
 
 echo == Funnel-Forge single-binary build ==
 
-REM --- 1. venv module চেক ---
+REM --- 1. Check for the venv module ---
 python -m venv --help >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Python venv module পাওয়া যায়নি। Python ইনস্টলেশন যাচাই করুন।
+    echo [ERROR] Python venv module not found. Check your Python installation.
     exit /b 1
 )
 
-REM --- 2. ফ্রেশ venv তৈরি ---
+REM --- 2. Create a fresh venv ---
 if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
-echo Virtual environment তৈরি করা হচ্ছে (%VENV_DIR%)...
+echo Creating virtual environment (%VENV_DIR%)...
 python -m venv "%VENV_DIR%"
 
 call "%VENV_DIR%\Scripts\activate.bat"
 
-REM --- 3. dependency ইনস্টল ---
-echo Dependencies ইনস্টল করা হচ্ছে...
+REM --- 3. Install dependencies ---
+echo Installing dependencies...
 pip install --upgrade pip >nul
 pip install -r requirements.txt
 
-REM --- 4. PyInstaller দিয়ে বিল্ড (spec ফ্রেশ জেনারেট হয়) ---
-echo PyInstaller দিয়ে বিল্ড করা হচ্ছে...
+REM --- 4. Build with PyInstaller (spec regenerated fresh) ---
+echo Building with PyInstaller...
 pyinstaller --noconfirm --clean --onefile --windowed --name %APP_NAME% main.py
 
 call "%VENV_DIR%\Scripts\deactivate.bat"
 
-REM --- 5. ক্লিনআপ: venv, build artifacts, generated spec — dist\ ছাড়া সব মুছে ফেলা ---
-echo বিল্ড আর্টিফ্যাক্ট পরিষ্কার করা হচ্ছে...
+REM --- 5. Clean up: venv, build artifacts, generated spec - keep dist\ only ---
+echo Cleaning up build artifacts...
 if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
 if exist build rmdir /s /q build
 if exist "%APP_NAME%.spec" del /q "%APP_NAME%.spec"
 for /d /r %%d in (__pycache__) do @if exist "%%d" rmdir /s /q "%%d"
 
-echo বিল্ড সম্পন্ন! বাইনারি পাবেন: dist\%APP_NAME%.exe
+echo Done! Binary available at: dist\%APP_NAME%.exe

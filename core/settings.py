@@ -21,6 +21,13 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "port": 3000,
     "socket_path": "/tmp/tailscaled.sock",
     "use_sudo": not IS_WINDOWS,
+    # "auto" = search PATH + common install dirs; "manual" = use the two
+    # paths below exactly as given.
+    "path_mode": "auto",
+    "tailscale_path": "",
+    "tailscaled_path": "",
+    # If true, check for a Tailscale update once each time the app starts.
+    "auto_update_check": False,
 }
 
 
@@ -45,4 +52,4 @@ def save_settings(settings: Dict[str, Any]) -> None:
         with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=4, ensure_ascii=False)
     except OSError as exc:
-        raise RuntimeError(f"Settings সেভ করা যায়নি: {exc}") from exc
+        raise RuntimeError(f"Could not save settings: {exc}") from exc

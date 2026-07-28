@@ -1,58 +1,67 @@
 # 🚀 Funnel-Forge: Tailscale Funnel Manager (PyQt6 GUI)
 
-এই প্রজেক্টটির মাধ্যমে টার্মাক্স (Termux/PRoot) বা যেকোনো লিনাক্স এনভায়রনমেন্ট থেকে আপনার লোকাল ওয়েব সার্ভারকে (যেমন: Flask, Django বা Node.js) Tailscale Funnel ব্যবহার করে ইন্টারনেটে পাবলিক করা যায় — এখন একটি স্ট্রাকচারড PyQt6 GUI অ্যাপ থেকে।
+This project lets you expose a local web server (Flask, Django, Node.js,
+etc.) running in Termux/PRoot or any Linux environment to the internet
+using Tailscale Funnel — now from a structured PyQt6 GUI app.
 
 ---
 
-## 📁 প্রজেক্ট স্ট্রাকচার
+## 📁 Project structure
 
 ```
 funnel-forge/
-├── main.py                    # অ্যাপ চালু করার এন্ট্রি পয়েন্ট
+├── main.py                    # App entry point
 ├── core/
-│   ├── settings.py            # settings.json লোড/সেভ করার লজিক
-│   └── funnel_controller.py   # tailscaled/tailscale প্রসেস ম্যানেজমেন্ট (QProcess)
+│   ├── settings.py            # settings.json load/save logic
+│   └── funnel_controller.py   # tailscaled/tailscale process management (QProcess)
 ├── ui/
-│   └── main_window.py         # PyQt6 মেইন উইন্ডো (ফর্ম + লগ ভিউ)
+│   ├── main_window.py         # PyQt6 main window (tabs: Funnel + Tailscale)
+│   └── tailscale_tab.py       # Install/update Tailscale, version check, path mode
 ├── requirements.txt
-├── build.sh                    # Linux/Termux বিল্ড স্ক্রিপ্ট (venv + PyInstaller, শেষে auto-clean)
-├── build.bat                   # Windows বিল্ড স্ক্রিপ্ট (একই কাজ করে)
-├── start-funnel.sh            # (ঐচ্ছিক) পুরনো CLI স্ক্রিপ্ট, ম্যানুয়াল ব্যবহারের জন্য রাখা হয়েছে
-├── stop-funnel.sh              # (ঐচ্ছিক) পুরনো CLI স্ক্রিপ্ট
-└── settings.json               # প্রথম রান-এর পর অটো তৈরি হবে (git-ignored)
+├── build.sh                   # Linux/Termux build script (venv + PyInstaller, auto-cleans)
+├── build.bat                  # Windows build script (same behavior)
+├── start-funnel.sh            # (optional) legacy CLI script, kept for manual use
+├── stop-funnel.sh             # (optional) legacy CLI script
+└── settings.json              # auto-created after the first run (git-ignored)
 ```
 
 ---
 
-## 🛠️ ধাপ ১: Tailscale ইনস্টল করা
+## 🛠️ Step 1: Install Tailscale
 
-আপনার লিনাক্স বা PRoot এনভায়রনমেন্টে Tailscale ইনস্টল করা না থাকলে টার্মিনালে নিচের কমান্ডটি রান করে ইনস্টল করে নিন:
+If Tailscale isn't installed in your Linux or PRoot environment yet, run:
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-## 🌐 ধাপ ২: Tailscale Admin Console কনফিগারেশন (ওয়েবসাইটের কাজ)
+## 🌐 Step 2: Tailscale Admin Console configuration (one-time setup)
 
-Tailscale Funnel ব্যবহার করে লোকাল সার্ভার ইন্টারনেটে এক্সপোজ করার জন্য ওয়েবসাইটের ড্যাশবোর্ড থেকে কিছু পারমিশন অন করতে হবে।
+To expose a local server to the internet with Tailscale Funnel, a few
+permissions need to be enabled from the admin dashboard.
 
-১. **লগইন:** Tailscale Admin Console-এ যান এবং আপনার গুগল/গিটহাব অ্যাকাউন্ট দিয়ে লগইন করুন।
+1. **Log in:** go to the Tailscale Admin Console and log in with your
+   Google/GitHub account.
 
-২. **DNS ও HTTPS চালু করা:**
-   - উপরের মেনু থেকে **DNS** ট্যাবে যান।
-   - **"MagicDNS"** এনাবল (Enable) করুন।
-   - একটু নিচে স্ক্রল করে **"HTTPS Certificates"** এনাবল করুন (ফানেল কাজ করার জন্য এটি বাধ্যতামূলক)।
-   - চাইলে **Rename tailnet**-এ ক্লিক করে আপনার ডোমেইনের নাম সহজ করে নিতে পারেন (যেমন: sumit-net.ts.net)।
+2. **Enable DNS & HTTPS:**
+   - Go to the **DNS** tab at the top.
+   - Enable **"MagicDNS"**.
+   - Scroll down and enable **"HTTPS Certificates"** (required for Funnel
+     to work).
+   - Optionally click **Rename tailnet** to give your domain a simpler
+     name (e.g. `sumit-net.ts.net`).
 
-৩. **Funnel পারমিশন দেওয়া (ACLs):**
-   - এবার **Access Controls** ট্যাবে যান। এখানে একটি JSON এডিটর দেখতে পাবেন।
-   - JSON কোডের ভেতরে `nodeAttrs` সেকশনটি যোগ করতে হবে, যাতে আপনার ডিভাইসটি ফানেল করার অ্যাক্সেস পায়।
+3. **Grant Funnel permission (ACLs):**
+   - Go to the **Access Controls** tab. You'll see a JSON editor.
+   - Add a `nodeAttrs` section so your device gets funnel access.
 
-   **কোথায় বসাবেন — ধাপে ধাপে:**
-   1. এডিটরের একদম নিচে স্ক্রল করুন। শেষের দিকে একটি ক্লোজিং ব্র্যাকেট `}` দেখবেন — এটাই পুরো কোডের একদম শেষ অংশ (পুরো ফাইলটাকে বন্ধ করছে)।
-   2. ঠিক এই শেষ `}` চিহ্নটার **আগের লাইনে** ক্লিক করুন (অর্থাৎ তার উপরের লাইনের শেষে)।
-   3. কিবোর্ড থেকে **Enter** চেপে একটি নতুন ফাঁকা লাইন তৈরি করুন।
-   4. সেই ফাঁকা লাইনে নিচের কোডটুকু হুবহু কপি করে পেস্ট করে দিন:
+   **Where to put it — step by step:**
+   1. Scroll to the very bottom of the editor. You'll see a closing brace
+      `}` — that's the end of the whole file.
+   2. Click right before that final `}` (i.e. at the end of the line
+      above it).
+   3. Press **Enter** to create a new blank line.
+   4. Paste the following exactly as-is:
 
 ```json
 "nodeAttrs": [
@@ -63,19 +72,24 @@ Tailscale Funnel ব্যবহার করে লোকাল সার্ভ
 ],
 ```
 
-   5. পেস্ট করার পর নিচে **Save** বাটনে ক্লিক করুন।
+   5. Click **Save** below.
 
-   > ⚠️ **সতর্কতা:** JSON ফাইলে প্রতিটি অংশের পরে কমা (,) বসানোর নিয়ম আছে, কিন্তু একদম শেষ অংশের পরে কমা বসানো যায় না। তাই যদি Save করার পর কোনো এরর (যেমন "trailing comma" বা "unexpected token") দেখায়, তাহলে আপনার পেস্ট করা অংশের ঠিক আগের লাইনের শেষে একটি কমা (,) আছে কিনা এবং একদম শেষ লাইনে বাড়তি কমা নেই কিনা — এই দুটো চেক করুন।
+   > ⚠️ **Note:** JSON requires a comma after every item except the very
+   > last one. If Save gives an error (e.g. "trailing comma" or
+   > "unexpected token"), check that the line just before your pasted
+   > block ends with a comma, and that the very last line has no extra
+   > trailing comma.
 
-## 💻 ধাপ ৩: লোকাল সার্ভার চালু করা
+## 💻 Step 3: Start your local server
 
-Funnel করার আগে আপনার ওয়েব সার্ভারটি চালু থাকতে হবে। উদাহরণস্বরূপ, যদি আপনি পোর্ট 5000-এ Flask ব্যবহার করেন:
+Your web server needs to be running before you funnel it. For example,
+with Flask on port 5000:
 
 ```bash
 python app.py
 ```
 
-## 🖥️ ধাপ ৪: GUI অ্যাপ ইনস্টল ও রান করা
+## 🖥️ Step 4: Install and run the GUI
 
 ```bash
 cd funnel-forge
@@ -83,19 +97,53 @@ pip install -r requirements.txt
 python main.py
 ```
 
-GUI-তে যা করতে পারবেন:
+What you can do from the **Funnel** tab:
 
-- **Hostname**, **Port**, **Socket path** সেট করা এবং প্রয়োজনে `sudo` ব্যবহার করা হবে কিনা টিক দেওয়া
-- **Start Funnel** চাপলে অ্যাপ নিজে থেকেই পুরোনো প্রসেস ক্লিন করে, `tailscaled` চালু করে, `tailscale up` দিয়ে কানেক্ট করে এবং শেষে `tailscale funnel <port>` চালিয়ে দেয় — সবই ব্যাকগ্রাউন্ডে, UI ফ্রিজ না করে
-- লাইভ **Log** প্যানেলে পুরো প্রক্রিয়ার আউটপুট দেখা যাবে, এবং পাবলিক লিংক পাওয়া মাত্র সেটি **Public URL** ফিল্ডে দেখানো হবে (ফরম্যাট: `https://share-forge.<আপনার-টেইলনেট-নাম>.ts.net`)
-- **Stop Funnel** চাপলে সব Tailscale প্রসেস ও সকেট ফাইল পরিষ্কারভাবে বন্ধ হয়ে যাবে
-- **Settings সেভ করুন** চাপলে হোস্টনেম/পোর্ট ইত্যাদি `settings.json`-এ সংরক্ষিত থাকবে পরবর্তী রান-এর জন্য
+- Set **Hostname**, **Port**, **Socket path**, and whether to use `sudo`
+- Clicking **Start Funnel** cleans up any old process, starts
+  `tailscaled`, connects with `tailscale up`, and finally runs
+  `tailscale funnel <port>` — all in the background, without freezing
+  the UI
+- The live **Log** panel shows the whole process's output, and the
+  resulting public link is auto-detected and shown in the **Public URL**
+  field (format: `https://share-forge.<your-tailnet-name>.ts.net`)
+- **Stop Funnel** cleanly terminates all Tailscale processes and the
+  socket file
+- **Save Settings** persists hostname/port/etc. to `settings.json` for
+  next time
 
-> প্রথমবার চালালে ব্রাউজারে একটি Tailscale অথেনটিকেশন লিংক খুলতে হতে পারে — সেটি ওপেন করে ডিভাইসটি 'Connect'/'Allow' করে দিন।
+> **Closing the window does not stop the Funnel.** The daemon and funnel
+> processes are launched detached from the GUI, so they keep serving
+> traffic in the background even after you close Funnel-Forge — the same
+> way the original shell scripts left it running in a terminal. Reopen
+> the app and press **Stop Funnel** whenever you want to shut it down; it
+> will detect an already-running session and show it as "Running".
 
-## 📦 ধাপ ৫: সিঙ্গেল বাইনারি বানানো (venv + PyInstaller)
+What you can do from the **Tailscale** tab:
 
-আলাদা virtual environment-এর ভেতরে বিল্ড হয়, বিল্ড শেষে নিজে থেকেই সব ক্লিন হয়ে যায় — শুধু চূড়ান্ত বাইনারিটা `dist/` ফোল্ডারে থেকে যায়। `.spec` ফাইলটা কমিট করা নেই — স্ক্রিপ্ট চালালে প্রতিবার নতুন করে জেনারেট হয় এবং বিল্ড শেষে মুছে যায়।
+- See the installed Tailscale **version**, with a **Refresh** button
+- **Install Tailscale** — runs the official install script
+  (`curl -fsSL https://tailscale.com/install.sh | sh`)
+- **Check & Update** — runs `tailscale update --yes` to self-update to
+  the latest release
+- **Manual Upgrade** — re-runs the install script (useful as a forced
+  reinstall/upgrade)
+- **Automatically check for updates on startup** checkbox — when
+  enabled, Funnel-Forge runs an update check once each time it starts
+- **Path mode: Auto-detect / Manual** — Auto searches `PATH` plus common
+  install directories (`/usr/sbin`, `/usr/local/sbin`, etc.); Manual lets
+  you type or browse to exact `tailscale` / `tailscaled` binary paths,
+  which the Funnel tab will then use instead of auto-detection
+
+> The first time you run it, Tailscale may open an authentication link in
+> your browser — open it and 'Connect'/'Allow' the device.
+
+## 📦 Step 5: Building a single binary (venv + PyInstaller)
+
+The build runs inside its own isolated virtual environment and cleans
+itself up afterward — only the final binary ends up in `dist/`. The
+`.spec` file isn't committed; the build script generates a fresh one
+every time it runs, then removes it when done.
 
 **Linux / Termux / proot-Debian:**
 
@@ -109,18 +157,26 @@ GUI-তে যা করতে পারবেন:
 build.bat
 ```
 
-স্ক্রিপ্টটি যা করে:
+What the script does:
 
-1. `python3 -m venv` (venv মডিউল) আছে কিনা যাচাই করে — না থাকলে স্পষ্ট এরর দেখিয়ে বন্ধ হয়ে যায় (Debian/Termux-এ `sudo apt install python3-venv` দিয়ে ঠিক করা যাবে)
-2. একটা ফ্রেশ `.build-venv` virtualenv বানিয়ে সেখানে `requirements.txt` থেকে dependency ইনস্টল করে
-3. সেই venv-এর ভেতর থেকে PyInstaller দিয়ে `--onefile` বাইনারি বিল্ড করে (`.spec` ফাইল এই ধাপেই ফ্রেশ জেনারেট হয়)
-4. শেষে venv, `build/`, জেনারেটেড `.spec`, এবং `__pycache__` ফোল্ডারগুলো মুছে ফেলে
+1. Checks whether `python3 -m venv` (the venv module) is available — if
+   not, it exits with a clear error (fix on Debian/Termux with
+   `sudo apt install python3-venv`)
+2. Creates a fresh `.build-venv` virtualenv and installs
+   `requirements.txt` into it
+3. Runs PyInstaller from inside that venv to build a `--onefile` binary
+   (the `.spec` file is generated fresh at this step)
+4. Removes the venv, `build/`, the generated `.spec`, and any
+   `__pycache__` folders afterward
 
-আউটপুট: `dist/funnel-forge` (Linux/Termux) বা `dist/funnel-forge.exe` (Windows) — এটাই একমাত্র বাইনারি ফাইল। যে প্ল্যাটফর্ম/আর্কিটেকচারের জন্য বাইনারি চান, সেই প্ল্যাটফর্মেই স্ক্রিপ্টটা চালাতে হবে (cross-compile হয় না)।
+Output: `dist/funnel-forge` (Linux/Termux) or `dist/funnel-forge.exe`
+(Windows) — a single executable file. Build on the platform/architecture
+you want the binary for (no cross-compiling).
 
-## 🔁 বিকল্প: পুরনো শেল স্ক্রিপ্ট দিয়ে (CLI)
+## 🔁 Alternative: legacy shell scripts (CLI)
 
-GUI ছাড়া টার্মিনাল থেকে চালাতে চাইলে আগের মতোই কাজ করবে:
+If you'd rather run things from the terminal without the GUI, the
+original scripts still work:
 
 ```bash
 cd funnel-forge
@@ -128,7 +184,11 @@ cd funnel-forge
 ./stop-funnel.sh
 ```
 
-## 📝 নোট
+## 📝 Notes
 
-- Windows-এ চালালে `sudo` অপশনটি স্বয়ংক্রিয়ভাবে বন্ধ থাকবে, কারণ Windows-এ sudo প্রযোজ্য নয়।
-- `tailscale` / `tailscaled` বাইনারি PATH-এ না থাকলে GUI একটি স্পষ্ট এরর মেসেজ দেখাবে।
+- On Windows, the "Use sudo" checkbox is automatically disabled since
+  sudo doesn't apply there.
+- If the `tailscale` / `tailscaled` binaries can't be found, the GUI now
+  checks common install locations (`/usr/sbin`, `/usr/local/sbin`, etc.)
+  in addition to `PATH`, and shows a clear error if they're still
+  missing.

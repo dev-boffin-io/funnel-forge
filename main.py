@@ -7,6 +7,7 @@ Run with: python main.py
 
 import sys
 
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
@@ -15,6 +16,7 @@ from ui.main_window import MainWindow
 def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Funnel-Forge")
+    app.setFont(QFont("", 13))
     window = MainWindow()
     window.show()
     return app.exec()
