@@ -164,7 +164,11 @@ class FunnelController(QObject):
             )
             return
 
-        logger.info("Starting Funnel (hostname=%s, port=%s).", settings.get("hostname"), settings.get("port"))
+        logger.info(
+            "Starting Funnel (hostname=%s, port=%s).",
+            settings.get("hostname"),
+            settings.get("port"),
+        )
         self._cleanup_sync(settings)
         self._daemon_offset = 0
         self._funnel_offset = 0
