@@ -1,0 +1,43 @@
+name: Build Windows Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x64 - standard GitHub-hosted runner
+          - runner: windows-latest
+            arch: x64
+          # arm64 - native Arm-hosted runner (no emulation/cross-compile)
+          - runner: windows-11-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build single binary
+        run: build.bat
+        shell: cmd
+
+      - name: Rename artifact with architecture
+        shell: cmd
+        run: ren dist\funnel-forge.exe funnel-forge-windows-${{ matrix.arch }}.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: funnel-forge-windows-${{ matrix.arch }}
+          path: dist/funnel-forge-windows-${{ matrix.arch }}.exe

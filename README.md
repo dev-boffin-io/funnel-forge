@@ -22,7 +22,8 @@ funnel-forge/
 ├── tests/                     # pytest suite (settings + controller logic)
 ├── .github/workflows/
 │   ├── ci.yml                 # Lint + tests on Linux/Windows, Python 3.10-3.12
-│   └── release.yml            # Single-binary build artifacts on v* tags
+│   ├── build-linux.yml        # Linux binaries: x86_64 + arm64, on v* tags
+│   └── build-windows.yml      # Windows binaries: x64 + arm64, on v* tags
 ├── requirements.txt
 ├── requirements-dev.txt        # pytest + ruff
 ├── requirements-lock.txt       # exact pinned versions for reproducible installs
@@ -223,8 +224,11 @@ ruff check .
   that file).
 - **CI:** `.github/workflows/ci.yml` runs `ruff` and `pytest` on every
   push/PR across Linux and Windows, Python 3.10-3.12.
-  `.github/workflows/release.yml` builds single-binary artifacts for
-  Linux and Windows whenever a `v*` tag is pushed.
+  `build-linux.yml` and `build-windows.yml` each build single-binary
+  artifacts for both architectures (Linux: x86_64 + arm64; Windows:
+  x64 + arm64, on native Arm-hosted runners - no emulation or
+  cross-compiling) whenever a `v*` tag is pushed, or on demand via
+  "Run workflow" in the Actions tab.
 - **Logs:** in addition to the on-screen log panels, everything is also
   written to a rotating log file so it survives after the app closes:
   `<system temp dir>/funnel-forge-logs/funnel-forge.log` (e.g.

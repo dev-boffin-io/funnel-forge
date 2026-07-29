@@ -1,0 +1,44 @@
+name: Build Linux Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # amd64 (x86_64) - standard GitHub-hosted runner
+          - runner: ubuntu-latest
+            arch: x86_64
+          # arm64 (aarch64) - native Arm-hosted runner (no emulation/cross-compile)
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build single binary
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Rename artifact with architecture
+        run: |
+          mv dist/funnel-forge "dist/funnel-forge-linux-${{ matrix.arch }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: funnel-forge-linux-${{ matrix.arch }}
+          path: dist/funnel-forge-linux-${{ matrix.arch }}
