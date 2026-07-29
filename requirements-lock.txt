@@ -1,0 +1,14 @@
+# Exact, known-good versions for reproducible installs (checked July 2026).
+#
+# Regenerate after upgrading anything, from inside a clean venv:
+#   pip install -r requirements.txt
+#   pip freeze > requirements-lock.txt
+#
+# Install from this file instead of requirements.txt when you want the
+# exact versions below rather than the open ranges:
+#   pip install -r requirements-lock.txt
+
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.1
+PyQt6-sip==13.11.1
+pyinstaller==6.21.0

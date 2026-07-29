@@ -26,7 +26,10 @@ from typing import Dict, List, Optional, Tuple
 
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
+from core.logger import get_logger
 from core.settings import IS_WINDOWS
+
+logger = get_logger("funnel_controller")
 
 URL_PATTERN = re.compile(r"https://[^\s]+")
 
@@ -136,6 +139,16 @@ class FunnelController(QObject):
             self.log_line.emit("Already running.")
             return
 
+        if settings.get("use_sudo") and not IS_WINDOWS and not self._sudo_is_passwordless():
+            logger.warning("Passwordless sudo is not available; refusing to start.")
+            self.error_occurred.emit(
+                "'sudo' requires a password in this environment, but Funnel-Forge "
+                "runs commands in the background where it can't prompt for one. "
+                "Either configure passwordless sudo for tailscale/tailscaled, or "
+                "uncheck 'Use sudo' if you don't need it."
+            )
+            return
+
         self._resolve_paths(settings)
         if not self._tailscale_bin or not self._tailscaled_bin:
             missing = []
@@ -143,6 +156,7 @@ class FunnelController(QObject):
                 missing.append("tailscale")
             if not self._tailscaled_bin:
                 missing.append("tailscaled")
+            logger.warning("Missing binaries: %s", ", ".join(missing))
             self.error_occurred.emit(
                 "Could not find: " + ", ".join(missing) + ". "
                 "Install Tailscale from the Tailscale tab, or set a manual "
@@ -150,6 +164,7 @@ class FunnelController(QObject):
             )
             return
 
+        logger.info("Starting Funnel (hostname=%s, port=%s).", settings.get("hostname"), settings.get("port"))
         self._cleanup_sync(settings)
         self._daemon_offset = 0
         self._funnel_offset = 0
@@ -175,6 +190,7 @@ class FunnelController(QObject):
 
     def stop(self, settings: Dict) -> None:
         """Terminate funnel + daemon processes and clean up the socket."""
+        logger.info("Stopping Funnel.")
         self.log_line.emit("Stopping Tailscale processes...")
         self._run_blocking(self._wrap_sudo(settings, ["pkill", "tailscale"]))
         self._run_blocking(self._wrap_sudo(settings, ["pkill", "tailscaled"]))
@@ -269,6 +285,7 @@ class FunnelController(QObject):
         if pid is not None:
             self._tail_timer.start()
         else:
+            logger.warning("Failed to start the Funnel process.")
             self.error_occurred.emit("Failed to start the Funnel process.")
 
     def _cleanup_sync(self, settings: Dict) -> None:
@@ -291,6 +308,19 @@ class FunnelController(QObject):
         proc = QProcess()
         proc.start(cmd, args)
         proc.waitForFinished(5000)
+
+    @staticmethod
+    def _sudo_is_passwordless() -> bool:
+        """Check `sudo -n true` so we fail fast instead of hanging silently.
+
+        The daemon/funnel processes run detached with no TTY, so if sudo
+        needs to prompt for a password it will just hang or fail silently
+        in the background - better to catch that up front.
+        """
+        proc = QProcess()
+        proc.start("sudo", ["-n", "true"])
+        proc.waitForFinished(3000)
+        return proc.exitCode() == 0
 
     def _start_detached_redirected(
         self, cmd_args: Tuple[str, List[str]], log_file: Path

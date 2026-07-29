@@ -13,12 +13,22 @@ funnel-forge/
 ├── main.py                    # App entry point
 ├── core/
 │   ├── settings.py            # settings.json load/save logic
-│   └── funnel_controller.py   # tailscaled/tailscale process management (QProcess)
+│   ├── funnel_controller.py   # tailscaled/tailscale process management (QProcess)
+│   └── logger.py              # Rotating file logging
 ├── ui/
 │   ├── main_window.py         # PyQt6 main window (tabs: Funnel + Tailscale + Setup Guide)
 │   ├── tailscale_tab.py       # Install/update Tailscale, version check, path mode
 │   └── setup_guide_tab.py     # Color-highlighted Tailscale website/Admin Console setup walkthrough
+├── tests/                     # pytest suite (settings + controller logic)
+├── .github/workflows/
+│   ├── ci.yml                 # Lint + tests on Linux/Windows, Python 3.10-3.12
+│   └── release.yml            # Single-binary build artifacts on v* tags
 ├── requirements.txt
+├── requirements-dev.txt        # pytest + ruff
+├── requirements-lock.txt       # exact pinned versions for reproducible installs
+├── pyproject.toml              # project metadata, ruff/pytest config
+├── LICENSE                     # MIT
+├── CHANGELOG.md
 ├── build.sh                   # Linux/Termux build script (venv + PyInstaller, auto-cleans)
 ├── build.bat                  # Windows build script (same behavior)
 ├── start-funnel.sh            # (optional) legacy CLI script, kept for manual use
@@ -194,10 +204,43 @@ cd funnel-forge
 ./stop-funnel.sh
 ```
 
+## 🧪 Development: tests, linting, logs
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+
+# Run the test suite (settings persistence + controller pure-logic helpers)
+pytest -v
+
+# Lint
+ruff check .
+```
+
+- **Reproducible installs:** `requirements.txt` uses open version ranges
+  for day-to-day development; `requirements-lock.txt` pins exact,
+  known-good versions for a reproducible build environment - use
+  `pip install -r requirements-lock.txt` when you want that instead.
+  Regenerate it after upgrading anything (see the comment at the top of
+  that file).
+- **CI:** `.github/workflows/ci.yml` runs `ruff` and `pytest` on every
+  push/PR across Linux and Windows, Python 3.10-3.12.
+  `.github/workflows/release.yml` builds single-binary artifacts for
+  Linux and Windows whenever a `v*` tag is pushed.
+- **Logs:** in addition to the on-screen log panels, everything is also
+  written to a rotating log file so it survives after the app closes:
+  `<system temp dir>/funnel-forge-logs/funnel-forge.log` (e.g.
+  `/tmp/funnel-forge-logs/` on Linux/Termux).
+- **Changelog:** see `CHANGELOG.md` for version history.
+
 ## 📝 Notes
 
 - On Windows, the "Use sudo" checkbox is automatically disabled since
   sudo doesn't apply there.
+- If "Use sudo" is checked, Funnel-Forge checks that `sudo` can run
+  without a password prompt before starting anything (the daemon/funnel
+  processes run detached, so they can't show a password prompt). If
+  passwordless sudo isn't configured, it fails fast with a clear message
+  instead of hanging silently in the background.
 - If the `tailscale` / `tailscaled` binaries can't be found, the GUI now
   checks common install locations (`/usr/sbin`, `/usr/local/sbin`, etc.)
   in addition to `PATH`, and shows a clear error if they're still

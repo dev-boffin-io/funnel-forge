@@ -6,6 +6,12 @@ build/
 *.spec
 *.spec.bak
 
+# === Testing / linting ===
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
 # === Python ===
 __pycache__/
 *.py[cod]

@@ -10,16 +10,24 @@ import sys
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
 
+from core.logger import get_logger, setup_logging
 from ui.main_window import MainWindow
 
 
 def main() -> int:
+    setup_logging()
+    logger = get_logger("main")
+    logger.info("Funnel-Forge starting up.")
+
     app = QApplication(sys.argv)
     app.setApplicationName("Funnel-Forge")
     app.setFont(QFont("", 13))
     window = MainWindow()
     window.show()
-    return app.exec()
+    exit_code = app.exec()
+
+    logger.info("Funnel-Forge exiting with code %s.", exit_code)
+    return exit_code
 
 
 if __name__ == "__main__":
