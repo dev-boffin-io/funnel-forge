@@ -39,6 +39,11 @@ def test_validate_manual_accepts_executable_file(tmp_path):
     assert FunnelController._validate_manual(str(script)) == str(script)
 
 
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Windows has no POSIX execute-permission bit; os.access(X_OK) "
+    "returns True for any existing file regardless of chmod there.",
+)
 def test_validate_manual_rejects_non_executable_file(tmp_path):
     script = tmp_path / "not-executable"
     script.write_text("just a file")
