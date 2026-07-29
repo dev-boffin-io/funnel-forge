@@ -28,7 +28,6 @@ funnel-forge/
 ├── requirements-lock.txt       # exact pinned versions for reproducible installs
 ├── pyproject.toml              # project metadata, ruff/pytest config
 ├── LICENSE                     # MIT
-├── CHANGELOG.md
 ├── build.sh                   # Linux/Termux build script (venv + PyInstaller, auto-cleans)
 ├── build.bat                  # Windows build script (same behavior)
 ├── start-funnel.sh            # (optional) legacy CLI script, kept for manual use
@@ -230,7 +229,6 @@ ruff check .
   written to a rotating log file so it survives after the app closes:
   `<system temp dir>/funnel-forge-logs/funnel-forge.log` (e.g.
   `/tmp/funnel-forge-logs/` on Linux/Termux).
-- **Changelog:** see `CHANGELOG.md` for version history.
 
 ## 📝 Notes
 
