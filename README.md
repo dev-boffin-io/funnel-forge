@@ -15,8 +15,9 @@ funnel-forge/
 │   ├── settings.py            # settings.json load/save logic
 │   └── funnel_controller.py   # tailscaled/tailscale process management (QProcess)
 ├── ui/
-│   ├── main_window.py         # PyQt6 main window (tabs: Funnel + Tailscale)
-│   └── tailscale_tab.py       # Install/update Tailscale, version check, path mode
+│   ├── main_window.py         # PyQt6 main window (tabs: Funnel + Tailscale + Setup Guide)
+│   ├── tailscale_tab.py       # Install/update Tailscale, version check, path mode
+│   └── setup_guide_tab.py     # Color-highlighted Tailscale website/Admin Console setup walkthrough
 ├── requirements.txt
 ├── build.sh                   # Linux/Termux build script (venv + PyInstaller, auto-cleans)
 ├── build.bat                  # Windows build script (same behavior)
@@ -137,6 +138,15 @@ What you can do from the **Tailscale** tab:
 
 > The first time you run it, Tailscale may open an authentication link in
 > your browser — open it and 'Connect'/'Allow' the device.
+
+What you can do from the **Setup Guide** tab:
+
+- A color-highlighted, in-app walkthrough of the whole one-time
+  Tailscale website/Admin Console setup - installing Tailscale, enabling
+  MagicDNS + HTTPS certs, and granting Funnel access via ACLs
+- Headings, JSON/code snippets, and warning callouts are each colored
+  differently so the important steps stand out without needing to
+  cross-reference this README
 
 ## 📦 Step 5: Building a single binary (venv + PyInstaller)
 

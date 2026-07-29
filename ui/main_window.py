@@ -34,6 +34,7 @@ from PyQt6.QtWidgets import (
 
 from core.funnel_controller import FunnelController
 from core.settings import IS_WINDOWS, load_settings, save_settings
+from ui.setup_guide_tab import SetupGuideTab
 from ui.tailscale_tab import TailscaleTab
 
 BASE_FONT_SIZE = 13
@@ -77,6 +78,9 @@ class MainWindow(QMainWindow):
             self.controller, self._collect_settings_from_ui, self._apply_settings_from_tab
         )
         tabs.addTab(self.tailscale_tab, "Tailscale")
+
+        self.setup_guide_tab = SetupGuideTab()
+        tabs.addTab(self.setup_guide_tab, "Setup Guide")
 
     def _build_funnel_tab(self, central: QWidget) -> None:
         root = QVBoxLayout(central)
