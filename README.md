@@ -31,6 +31,9 @@ funnel-forge/
 ├── LICENSE                     # MIT
 ├── build.sh                   # Linux/Termux build script (venv + PyInstaller, auto-cleans)
 ├── build.bat                  # Windows build script (same behavior)
+├── install.sh                 # Creates a Linux desktop entry only (no installs/build)
+├── assets/
+│   └── funnel-forge.png       # App icon used by the desktop entry
 ├── start-funnel.sh            # (optional) legacy CLI script, kept for manual use
 ├── stop-funnel.sh             # (optional) legacy CLI script
 └── settings.json              # auto-created after the first run (git-ignored)
@@ -192,6 +195,26 @@ What the script does:
 Output: `dist/funnel-forge` (Linux/Termux) or `dist/funnel-forge.exe`
 (Windows) — a single executable file. Build on the platform/architecture
 you want the binary for (no cross-compiling).
+
+## 🖱️ Step 6: Desktop entry (Linux)
+
+```bash
+./install.sh
+```
+
+This only creates a desktop entry — it doesn't install any
+dependencies or build anything. It writes
+`~/.local/share/applications/funnel-forge.desktop` using the project's
+icon (`assets/funnel-forge.png`), so Funnel-Forge shows up in your
+application launcher/menu.
+
+- If `dist/funnel-forge` already exists (i.e. you ran `build.sh`
+  first), the entry launches that compiled binary.
+- Otherwise it falls back to running `python3 main.py` directly from
+  the project folder.
+
+Re-run `install.sh` any time after building the binary to switch the
+launcher over to it.
 
 ## 🔁 Alternative: legacy shell scripts (CLI)
 
