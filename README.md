@@ -149,8 +149,13 @@ What you can do from the **Tailscale** tab:
   you type or browse to exact `tailscale` / `tailscaled` binary paths,
   which the Funnel tab will then use instead of auto-detection
 
-> The first time you run it, Tailscale may open an authentication link in
-> your browser — open it and 'Connect'/'Allow' the device.
+> **First-time authentication:** if this device hasn't been authenticated
+> with Tailscale yet, pressing **Start Funnel** will pop up a dialog with
+> a `login.tailscale.com` link (it also appears in the Log panel). Open
+> that link in any browser, log in, and approve the device - Start Funnel
+> then continues automatically once that's done. This only happens once;
+> after that, the device stays authenticated. You can also authenticate
+> ahead of time from a terminal instead: `sudo tailscale up`.
 
 What you can do from the **Setup Guide** tab:
 

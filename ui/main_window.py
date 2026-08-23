@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
         self.controller.status_changed.connect(self._on_status_changed)
         self.controller.public_url_found.connect(self._on_public_url)
         self.controller.error_occurred.connect(self._on_error)
+        self.controller.auth_required.connect(self._on_auth_required)
 
         self._build_ui()
         self._load_settings_into_ui()
@@ -245,6 +246,19 @@ class MainWindow(QMainWindow):
 
     def _on_public_url(self, url: str) -> None:
         self.url_label.setText(url)
+
+    def _on_auth_required(self, url: str) -> None:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Information)
+        box.setWindowTitle("Tailscale authentication needed")
+        box.setText(
+            "This device isn't authenticated with Tailscale yet.\n\n"
+            "Open this link in a browser (any device) and approve it:"
+        )
+        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        box.setDetailedText(url)
+        box.setInformativeText(url)
+        box.exec()
 
     def _on_error(self, message: str) -> None:
         QMessageBox.critical(self, "Error", message)

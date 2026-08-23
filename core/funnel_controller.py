@@ -85,6 +85,7 @@ class FunnelController(QObject):
     status_changed = pyqtSignal(bool)          # True = running
     public_url_found = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
+    auth_required = pyqtSignal(str)            # emits the login.tailscale.com URL
 
     # Tailscale install/update/version management (separate channel so it
     # doesn't mix into the funnel log view).
@@ -98,6 +99,7 @@ class FunnelController(QObject):
         self._running = False
         self._tailscale_bin: Optional[str] = None
         self._tailscaled_bin: Optional[str] = None
+        self._up_process: Optional[QProcess] = None
 
         self._tail_timer = QTimer(self)
         self._tail_timer.setInterval(700)
@@ -273,7 +275,41 @@ class FunnelController(QObject):
                 f"--hostname={settings['hostname']}",
             ],
         )
-        self._run_blocking((cmd, args))
+        # Not a short _run_blocking() call: the first time a device isn't
+        # authenticated yet, this prints a login.tailscale.com URL and then
+        # waits for the browser approval, which can take as long as the
+        # person needs - a fixed timeout would silently swallow that URL
+        # and move on before authentication ever happens.
+        self._up_process = QProcess(self)
+        self._up_process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        self._up_process.readyReadStandardOutput.connect(self._emit_up_output)
+        self._up_process.finished.connect(
+            lambda code, _status: self._on_up_finished(code, settings)
+        )
+        self._up_process.start(cmd, args)
+
+    def _emit_up_output(self) -> None:
+        if self._up_process is None:
+            return
+        data = bytes(self._up_process.readAllStandardOutput()).decode("utf-8", errors="replace")
+        for line in data.splitlines():
+            if not line.strip():
+                continue
+            self.log_line.emit(line)
+            if "login.tailscale.com" in line:
+                match = URL_PATTERN.search(line)
+                if match:
+                    logger.info("Tailscale auth required: %s", match.group(0))
+                    self.auth_required.emit(match.group(0))
+
+    def _on_up_finished(self, exit_code: int, settings: Dict) -> None:
+        self._up_process = None
+        if exit_code != 0:
+            logger.warning("`tailscale up` exited with code %s.", exit_code)
+            self.error_occurred.emit(
+                "`tailscale up` did not complete successfully - check the log above."
+            )
+            return
         self._run_funnel(settings)
 
     def _run_funnel(self, settings: Dict) -> None:
