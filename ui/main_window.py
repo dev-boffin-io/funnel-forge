@@ -16,7 +16,9 @@ tools if needed.
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
+    QApplication,
     QCheckBox,
+    QDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -248,17 +250,45 @@ class MainWindow(QMainWindow):
         self.url_label.setText(url)
 
     def _on_auth_required(self, url: str) -> None:
-        box = QMessageBox(self)
-        box.setIcon(QMessageBox.Icon.Information)
-        box.setWindowTitle("Tailscale authentication needed")
-        box.setText(
-            "This device isn't authenticated with Tailscale yet.\n\n"
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Tailscale authentication needed")
+        dialog.setMinimumWidth(480)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
+
+        info = QLabel(
+            "This device isn't authenticated with Tailscale yet.\n"
             "Open this link in a browser (any device) and approve it:"
         )
-        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        box.setDetailedText(url)
-        box.setInformativeText(url)
-        box.exec()
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        link_row = QHBoxLayout()
+        link_field = QLineEdit(url)
+        link_field.setReadOnly(True)
+        link_field.setMinimumHeight(34)
+        link_row.addWidget(link_field)
+
+        copy_button = QPushButton("Copy Link")
+
+        def do_copy():
+            QApplication.clipboard().setText(url)
+            copy_button.setText("Copied!")
+
+        copy_button.clicked.connect(do_copy)
+        link_row.addWidget(copy_button)
+        layout.addLayout(link_row)
+
+        button_row = QHBoxLayout()
+        button_row.addStretch()
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(dialog.accept)
+        button_row.addWidget(ok_button)
+        layout.addLayout(button_row)
+
+        link_field.selectAll()
+        dialog.exec()
 
     def _on_error(self, message: str) -> None:
         QMessageBox.critical(self, "Error", message)
