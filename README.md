@@ -103,6 +103,17 @@ with Flask on port 5000:
 python app.py
 ```
 
+## 🔑 Step 3.5: Disable key expiry (recommended for long-running Funnels)
+
+By default, a device's Tailscale key expires after a while (180 days),
+which would silently disconnect the Funnel. For a device that runs the
+Funnel long-term, turn that off:
+
+1. Open the Tailscale admin console: **Machines**.
+2. For the device running the Funnel, open the three-dot menu on the
+   right.
+3. Select **Disable key expiry**.
+
 ## 🖥️ Step 4: Install and run the GUI
 
 ```bash

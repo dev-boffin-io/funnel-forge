@@ -88,8 +88,19 @@ line in the file has no extra trailing comma.
 on port 5000:</p>
 <span class="code">python app.py</span>
 
+<h2><span class="step-num">6</span>Disable key expiry</h2>
+<p>By default, a device's Tailscale key expires after a while (180 days),
+which would silently disconnect the Funnel. For a device that runs the
+Funnel long-term, turn that off:</p>
+<ol>
+<li>Open the Tailscale admin console: <b>Machines</b>.</li>
+<li>For the device running the Funnel, open the three-dot menu on the
+right.</li>
+<li>Select <b>Disable key expiry</b>.</li>
+</ol>
+
 <div class="note">
-✅ Once steps 1-5 are done, head to the <b>Funnel</b> tab, set your
+✅ Once steps 1-6 are done, head to the <b>Funnel</b> tab, set your
 Hostname/Port, and press <b>Start Funnel</b>.
 </div>
 """
