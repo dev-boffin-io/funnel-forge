@@ -14,7 +14,8 @@ funnel-forge/
 ├── core/
 │   ├── settings.py            # settings.json load/save logic
 │   ├── funnel_controller.py   # tailscaled/tailscale process management (QProcess)
-│   └── logger.py              # Rotating file logging
+│   ├── logger.py              # Rotating file logging
+│   └── cli.py                 # argparse-driven CLI mode (start/stop/status/etc.)
 ├── ui/
 │   ├── main_window.py         # PyQt6 main window (tabs: Funnel + Tailscale + Setup Guide)
 │   ├── tailscale_tab.py       # Install/update Tailscale, version check, path mode
@@ -177,6 +178,37 @@ What you can do from the **Setup Guide** tab:
   differently so the important steps stand out without needing to
   cross-reference this README
 
+### Command-line (CLI) mode
+
+`main.py` (and the built binary) also work headlessly - handy for
+scripting, cron, systemd, or a terminal-only environment. With no
+arguments it opens the GUI as usual; give it a subcommand instead to
+run without one:
+
+```bash
+python main.py start --hostname boffin-io --port 3000   # start the Funnel
+python main.py start --no-sudo                          # override just sudo usage
+python main.py stop                                      # stop the Funnel
+python main.py status                                     # is it running?
+python main.py version                                    # installed Tailscale version
+python main.py install-tailscale                          # run the install script
+python main.py update-tailscale                            # self-update Tailscale
+python main.py --help                                      # see all options
+```
+
+The built binary works the same way, just without `python`:
+
+```bash
+./dist/funnel-forge start --hostname boffin-io --port 3000
+```
+
+`start` accepts `--hostname`, `--port`, `--socket-path`, and
+`--sudo`/`--no-sudo` to override the saved settings for that run (they
+also get saved for next time, same as the GUI's Start Funnel button). If
+first-time Tailscale authentication is needed, the CLI prints the
+`login.tailscale.com` URL and waits for you to approve it in a browser
+before continuing.
+
 ## 📦 Step 5: Building a single binary (venv + PyInstaller)
 
 The build runs inside its own isolated virtual environment and cleans
@@ -286,3 +318,7 @@ ruff check .
   checks common install locations (`/usr/sbin`, `/usr/local/sbin`, etc.)
   in addition to `PATH`, and shows a clear error if they're still
   missing.
+- The built Windows binary is `--windowed` (no console) so double-clicking
+  it opens straight into the GUI with no flashing terminal window. When
+  you run it from a terminal with a CLI subcommand, it automatically
+  attaches to that terminal so you still see the output.
